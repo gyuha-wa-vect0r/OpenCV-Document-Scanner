@@ -267,6 +267,9 @@ class DocScanner(object):
 
         RESCALED_HEIGHT = 500.0
         OUTPUT_DIR = 'output'
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        output_dir = os.path.join(script_dir, OUTPUT_DIR)
+        os.makedirs(output_dir, exist_ok=True)
 
         # load the image and compute the ratio of the old height
         # to the new height, clone it, and resize it
@@ -299,7 +302,9 @@ class DocScanner(object):
 
         # save the transformed image
         basename = os.path.basename(image_path)
-        cv2.imwrite(OUTPUT_DIR + '/' + basename, thresh)
+        output_path = os.path.join(output_dir, basename)
+        if not cv2.imwrite(output_path, thresh):
+            raise IOError("Failed to write scanned image to {}".format(output_path))
         print("Proccessed " + basename)
 
 
@@ -324,10 +329,12 @@ if __name__ == "__main__":
 
     # Scan single image specified by command line argument --image <IMAGE_PATH>
     if im_file_path:
+        im_file_path = os.path.abspath(im_file_path)
         scanner.scan(im_file_path)
 
     # Scan all valid images in directory specified by command line argument --images <IMAGE_DIR>
     else:
+        im_dir = os.path.abspath(im_dir)
         im_files = [f for f in os.listdir(im_dir) if get_ext(f) in valid_formats]
         for im in im_files:
-            scanner.scan(im_dir + '/' + im)
+            scanner.scan(os.path.join(im_dir, im))
